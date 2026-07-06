@@ -1,0 +1,19 @@
+# Supabase Secure Keys Configuration
+js/supabase-config.js
+
+# Local logs and task execution logs
+*.log
+.system_generated/
+brain/
+scratch/
+
+# Python execution caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Operating System temporary files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

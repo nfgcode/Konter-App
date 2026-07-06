@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konter-TrackApp - Sistem Pencatatan & Bagi Hasil</title>
+  
+  <!-- CDNs for Premium Fonts and Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark-theme">
+
+  <!-- ADMIN LOGIN VIEW -->
+  <div id="login-screen" class="login-container">
+    <div class="login-card">
+      <div class="login-logo">
+        <i class="fa-solid fa-receipt"></i> Konter-Track
+      </div>
+      <div class="login-subtitle">Sistem Pencatatan Transaksi Konter & Bagi Hasil Koperasi</div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="username" class="form-control" placeholder="Masukkan username" required value="admin">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="password" class="form-control" placeholder="Masukkan password" required value="koperasi123">
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-primary">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk Sekarang
+        </button>
+      </form>
+      
+      <div class="login-footer">
+        Default: admin / koperasi123
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="app-screen" class="app-container" style="display: none;">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
+        <div class="brand-name">Konter-Track</div>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li class="menu-item active" data-target="dashboard">
+          <a><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+        </li>
+        <li class="menu-item" data-target="transactions">
+          <a><i class="fa-solid fa-cart-plus"></i> Catat Transaksi</a>
+        </li>
+        <li class="menu-item" data-target="customers">
+          <a><i class="fa-solid fa-users"></i> Daftar Nama</a>
+        </li>
+        <li class="menu-item" data-target="prices">
+          <a><i class="fa-solid fa-tags"></i> Daftar Harga</a>
+        </li>
+        <li class="menu-item" data-target="reports">
+          <a><i class="fa-solid fa-file-invoice-dollar"></i> Laporan Laba</a>
+        </li>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="avatar">AD</div>
+          <div class="user-info">
+            <span class="user-name">Administrator</span>
+            <span class="user-role">Konter Owner & Reseller</span>
+          </div>
+        </div>
+        <button id="logout-btn" class="btn-logout">
+          <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN APP AREA -->
+    <main class="main-content">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="header-title">
+          <h1 id="page-heading">Dashboard</h1>
+          <p id="page-subheading">Informasi ringkasan performa keuangan konter koperasi Anda hari ini.</p>
+        </div>
+        <div class="header-actions">
+          <button id="theme-toggle" class="btn-icon" title="Ganti Tema">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <div class="date-badge btn-secondary">
+            <i class="fa-solid fa-calendar-day"></i> <span id="current-date">07 Juli 2026</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEW PANES -->
+      <!-- 1. DASHBOARD VIEW -->
+      <section id="view-dashboard" class="view-pane active">
+        <!-- STATS CARDS -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon icon-blue">
+              <i class="fa-solid fa-money-bill-trend-up"></i>
+            </div>
+            <div class="stat-label">Total Omset (Jual)</div>
+            <div class="stat-value text-primary" id="stat-total-omset">Rp 0</div>
+            <div class="stat-trend trend-up">
+              <i class="fa-solid fa-arrow-up"></i> Terkumpul dari seluruh transaksi
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon icon-purple">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div class="stat-label">Total Modal Usaha</div>
+            <div class="stat-value text-primary" id="stat-total-modal">Rp 0</div>
+            <div class="stat-trend text-muted">
+              Harga beli dasar dari distributor
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon icon-green">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div class="stat-label">Laba Bersih Saya (Reseller)</div>
+            <div class="stat-value" style="color: var(--success);" id="stat-laba-reseller">Rp 0</div>
+            <div class="stat-trend trend-up">
+              <i class="fa-solid fa-coins"></i> Hak komisi tetap + pembulatan
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon icon-yellow">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div class="stat-label">Laba Bersih Koperasi</div>
+            <div class="stat-value" style="color: var(--accent);" id="stat-laba-koperasi">Rp 0</div>
+            <div class="stat-trend trend-up">
+              <i class="fa-solid fa-piggy-bank"></i> Rp 1.000 / transaksi pulsa
+            </div>
+          </div>
+        </div>
+
+        <!-- CHARTS & RECENT -->
+        <div class="dashboard-grid">
+          <!-- Graph Card -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><i class="fa-solid fa-chart-area"></i> Tren Keuntungan Penjualan</h2>
+              <div class="card-actions">
+                <button class="btn-secondary" onclick="app.refreshDashboardCharts()">
+                  <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                </button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="salesChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Quick Info Box -->
+          <div class="card quick-action-section">
+            <div class="card-header">
+              <h2 class="card-title"><i class="fa-solid fa-bolt"></i> Menu Pintar</h2>
+            </div>
+            <div class="action-list">
+              <button class="action-btn" onclick="app.switchView('transactions')">
+                <div class="action-btn-info">
+                  <i class="fa-solid fa-cart-plus"></i>
+                  <span>Input Transaksi Baru</span>
+                </div>
+                <i class="fa-solid fa-angle-right"></i>
+              </button>
+              
+              <button class="action-btn" onclick="app.switchView('reports')">
+                <div class="action-btn-info">
+                  <i class="fa-solid fa-file-invoice-dollar"></i>
+                  <span>Unduh Dokumen Laba</span>
+                </div>
+                <i class="fa-solid fa-angle-right"></i>
+              </button>
+              
+              <button class="action-btn" onclick="app.openAddCustomerModal()">
+                <div class="action-btn-info">
+                  <i class="fa-solid fa-user-plus"></i>
+                  <span>Tambah Nama Pelanggan</span>
+                </div>
+                <i class="fa-solid fa-angle-right"></i>
+              </button>
+            </div>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--bg-dark-border);">
+              <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">Ringkasan Kas Saat Ini</h3>
+              <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+                <span class="text-secondary">Jumlah Transaksi:</span>
+                <span id="stat-total-transactions" style="font-weight: 600;">0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+                <span class="text-secondary">Bonus Pembulatan Kas:</span>
+                <span id="stat-laba-rounding" style="font-weight: 600; color: var(--success);">Rp 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECENT TRANSACTIONS TABLE -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Transaksi Terakhir</h2>
+            <button class="btn-secondary" onclick="app.switchView('reports')">Lihat Semua</button>
+          </div>
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Pelanggan</th>
+                  <th>Produk</th>
+                  <th>No. Tujuan / ID</th>
+                  <th>Harga Modal</th>
+                  <th>Harga Jual</th>
+                  <th>Laba Saya</th>
+                  <th>Laba Kop</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="recent-transactions-tbody">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. CATAT TRANSAKSI VIEW -->
+      <section id="view-transactions" class="view-pane">
+        <div class="form-grid">
+          <!-- Main Form Card -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><i class="fa-solid fa-pen-to-square"></i> Formulir Input Transaksi Penjualan</h2>
+            </div>
+            
+            <form id="transaction-form">
+              <!-- Customer List Auto-fill -->
+              <div class="form-group autocomplete-container">
+                <label for="trans-customer-name">Nama Pelanggan (List Nama)</label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-user-tag"></i>
+                  <input type="text" id="trans-customer-name" class="form-control" placeholder="Ketik nama pelanggan untuk isi otomatis..." autocomplete="off">
+                </div>
+                <div id="customer-suggestions" class="autocomplete-suggestions">
+                  <!-- Suggestions will appear here -->
+                </div>
+                <div style="margin-top: 5px; font-size: 12px; color: var(--text-muted);">
+                  *Memilih nama pelanggan akan otomatis mengisi Nomor Tujuan / ID Pelanggan.
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="trans-target-number">Nomor Tujuan / ID Pelanggan</label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-mobile-screen"></i>
+                    <input type="text" id="trans-target-number" class="form-control" placeholder="Contoh: 081234567890 / 51234567" required>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="trans-date">Tanggal Transaksi</label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-calendar"></i>
+                    <input type="datetime-local" id="trans-date" class="form-control" required>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product Categories Tabs -->
+              <div class="form-tabs">
+                <button type="button" class="form-tab active" data-category="Pulsa" onclick="app.setFormCategory('Pulsa')">
+                  <i class="fa-solid fa-mobile-retro"></i> Pulsa Seluler
+                </button>
+                <button type="button" class="form-tab" data-category="Topup" onclick="app.setFormCategory('Topup')">
+                  <i class="fa-solid fa-gamepad"></i> E-Wallet / Topup Game
+                </button>
+                <button type="button" class="form-tab" data-category="Tagihan" onclick="app.setFormCategory('Tagihan')">
+                  <i class="fa-solid fa-file-invoice"></i> Tagihan PLN & PDAM
+                </button>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="trans-product-select">Pilih Produk</label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-box-open"></i>
+                    <select id="trans-product-select" class="form-control" required style="padding-left: 42px;">
+                      <!-- Dynamically filled -->
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="trans-modal-price">Harga Modal dasar (Rp)</label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-tags"></i>
+                    <input type="number" id="trans-modal-price" class="form-control" placeholder="0" readonly>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PRICING OPTIONS (Auto / Manual) -->
+              <div class="form-group">
+                <label>Metode Penentuan Harga Jual</label>
+                <div class="pricing-options">
+                  <div class="pricing-option-card">
+                    <input type="radio" id="price-opt-auto" name="price_option" value="auto" checked>
+                    <label for="price-opt-auto" class="pricing-option-label">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Otomatis (Markup Aturan)
+                    </label>
+                  </div>
+                  <div class="pricing-option-card">
+                    <input type="radio" id="price-opt-manual" name="price_option" value="manual">
+                    <label for="price-opt-manual" class="pricing-option-label">
+                      <i class="fa-solid fa-keyboard"></i> Manual (Isi Sendiri)
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group" id="manual-price-wrapper" style="display: none;">
+                <label for="trans-selling-price">Harga Jual Akhir Manual (Rp)</label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-rupiah-sign"></i>
+                  <input type="number" id="trans-selling-price" class="form-control" placeholder="Masukkan harga jual akhir untuk pelanggan">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary" style="margin-top: 15px;">
+                <i class="fa-solid fa-circle-check"></i> Simpan & Kunci Transaksi
+              </button>
+            </form>
+          </div>
+
+          <!-- Live Breakdown Card -->
+          <div class="card live-preview-card">
+            <div class="card-header">
+              <h2 class="card-title" style="color: var(--primary);"><i class="fa-solid fa-calculator"></i> Kalkulasi &amp; Bagi Hasil</h2>
+            </div>
+            
+            <div style="margin-bottom: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+              <span id="commission-rule-desc">Untuk kategori <strong>Pulsa</strong>, keuntungan akan dibagi rata sebesar Rp 1.000 ke koperasi dan Rp 1.000 ke reseller, serta bonus pembulatan.</span>
+            </div>
+            
+            <div class="preview-row">
+              <span class="preview-label">Harga Modal:</span>
+              <span class="preview-value" id="preview-modal">Rp 0</span>
+            </div>
+            
+            <div class="preview-row">
+              <span class="preview-label">Markup Awal:</span>
+              <span class="preview-value" id="preview-markup">Rp 0</span>
+            </div>
+            
+            <div class="preview-row">
+              <span class="preview-label">Bonus Pembulatan Bulat Terdekat:</span>
+              <span class="preview-value" id="preview-rounding" style="color: var(--success);">Rp 0</span>
+            </div>
+
+            <div class="preview-row">
+              <span class="preview-label">Komisi Hak Koperasi:</span>
+              <span class="preview-value" id="preview-koperasi" style="color: var(--accent);">Rp 0</span>
+            </div>
+            
+            <div class="preview-row">
+              <span class="preview-label">Komisi Hak Saya (Reseller):</span>
+              <span class="preview-value" id="preview-reseller" style="color: var(--success);">Rp 0</span>
+            </div>
+            
+            <div class="preview-row">
+              <span class="preview-label">Harga Jual Akhir (Pelanggan):</span>
+              <span class="preview-value-highlight" id="preview-selling-price">Rp 0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. DAFTAR NAMA PELANGGAN VIEW -->
+      <section id="view-customers" class="view-pane">
+        <div class="card">
+          <div class="card-header">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="customer-search" class="form-control search-input" placeholder="Cari nama pelanggan...">
+            </div>
+            <button class="btn-primary" style="width: auto; margin-top: 0;" onclick="app.openAddCustomerModal()">
+              <i class="fa-solid fa-user-plus"></i> Tambah Pelanggan Baru
+            </button>
+          </div>
+          
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Nomor Tujuan / ID</th>
+                  <th>Catatan</th>
+                  <th>Jumlah Transaksi</th>
+                  <th>Total Transaksi Belanja</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="customers-tbody">
+                <!-- Dynamically filled -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. DAFTAR HARGA VIEW -->
+      <section id="view-prices" class="view-pane">
+        <!-- GLOBAL CONFIG CARD -->
+        <div class="card global-settings-card">
+          <div class="card-header">
+            <h2 class="card-title" style="color: var(--secondary);"><i class="fa-solid fa-gears"></i> Aturan Markup Profit Global</h2>
+          </div>
+          <div class="settings-grid">
+            <div class="form-group">
+              <label>Bagi Hasil Pulsa (Koperasi)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-rupiah-sign"></i>
+                <input type="number" id="global-kop-pulsa-profit" class="form-control" value="1000" style="padding-left: 32px;" onchange="app.saveGlobalMarkupSettings()">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Bagi Hasil Pulsa (Saya / Reseller)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-rupiah-sign"></i>
+                <input type="number" id="global-reseller-pulsa-profit" class="form-control" value="1000" style="padding-left: 32px;" onchange="app.saveGlobalMarkupSettings()">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Markup Topup (Saya / Reseller)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-rupiah-sign"></i>
+                <input type="number" id="global-reseller-topup-profit" class="form-control" value="3000" style="padding-left: 32px;" onchange="app.saveGlobalMarkupSettings()">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Markup Tagihan (Saya / Reseller)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-rupiah-sign"></i>
+                <input type="number" id="global-reseller-tagihan-profit" class="form-control" value="3000" style="padding-left: 32px;" onchange="app.saveGlobalMarkupSettings()">
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 15px;">
+            *Aturan bagi hasil akan memicu penghitungan harga jual secara otomatis pada halaman pengetikan transaksi.
+          </div>
+        </div>
+
+        <!-- CLOUD DATABASE SYNC CARD -->
+        <div class="card" style="border-color: rgba(0, 230, 118, 0.2); background-color: rgba(0, 230, 118, 0.02); margin-bottom: 25px;">
+          <div class="card-header">
+            <h2 class="card-title" style="color: var(--success);"><i class="fa-solid fa-cloud-arrow-up"></i> Sinkronisasi Cloud Database (Supabase Free Tier)</h2>
+            <div id="db-status-badge" class="badge" style="background-color: var(--text-muted); color: white; padding: 6px 12px; border-radius: 20px;">Offline (Penyimpanan Lokal)</div>
+          </div>
+          <div class="settings-grid">
+            <div class="form-group">
+              <label for="db-supabase-url">Supabase Project URL</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-link"></i>
+                <input type="text" id="db-supabase-url" class="form-control" placeholder="https://xxxx.supabase.co" style="padding-left: 42px;">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="db-supabase-key">Supabase Anon Key (API Key)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" id="db-supabase-key" class="form-control" placeholder="eyJhbGciOi..." style="padding-left: 42px;">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-primary" id="btn-connect-db" style="width: auto; margin-top: 0; background: linear-gradient(135deg, var(--success), #00b0ff); box-shadow: 0 4px 15px var(--success-glow);" onclick="app.connectSupabase()">
+              <i class="fa-solid fa-circle-nodes"></i> Hubungkan & Sinkronkan
+            </button>
+            <button type="button" class="btn-secondary" id="btn-disconnect-db" style="display: none;" onclick="app.disconnectSupabase()">
+              <i class="fa-solid fa-circle-xmark"></i> Putuskan Sambungan
+            </button>
+          </div>
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 15px;">
+            *Dengan menghubungkan Supabase, seluruh data transaksi dan pelanggan Anda akan disinkronkan secara aman ke cloud secara gratis, sehingga Anda dapat mengakses data yang sama dari perangkat lain (HP / Laptop).
+          </div>
+        </div>
+
+        <!-- PRODUCTS CATALOG -->
+        <div class="card">
+          <div class="catalog-header-row">
+            <!-- Search bar -->
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="catalog-search" class="form-control search-input" placeholder="Cari nama/kategori produk...">
+            </div>
+            
+            <!-- Category Selector Tabs -->
+            <div class="form-tabs" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+              <button class="form-tab active" data-catalog-tab="Semua" onclick="app.setCatalogTab('Semua')">Semua</button>
+              <button class="form-tab" data-catalog-tab="Pulsa" onclick="app.setCatalogTab('Pulsa')">Pulsa</button>
+              <button class="form-tab" data-catalog-tab="Topup" onclick="app.setCatalogTab('Topup')">Topup</button>
+              <button class="form-tab" data-catalog-tab="Tagihan" onclick="app.setCatalogTab('Tagihan')">Tagihan</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>Kode</th>
+                  <th>Nama Produk</th>
+                  <th>Kategori</th>
+                  <th>Harga Modal</th>
+                  <th>Aturan Profit Markup</th>
+                  <th>Pembulatan Akhir</th>
+                  <th style="color: var(--primary);">Harga Jual Ter-markup</th>
+                </tr>
+              </thead>
+              <tbody id="catalog-tbody">
+                <!-- Dynamically filled -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. LAPORAN LABA TERPISAH VIEW -->
+      <section id="view-reports" class="view-pane">
+        <!-- Date Filters -->
+        <div class="card filter-bar">
+          <div class="date-filters">
+            <div>
+              <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Tanggal Mulai</label>
+              <input type="date" id="filter-start-date" class="date-input">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Tanggal Selesai</label>
+              <input type="date" id="filter-end-date" class="date-input">
+            </div>
+            <button class="btn-primary" style="width: auto; height: 36px; padding: 0 15px; margin-top: 18px;" onclick="app.applyReportFilters()">
+              <i class="fa-solid fa-filter"></i> Saring
+            </button>
+          </div>
+          
+          <div style="display: flex; gap: 10px; margin-top: 18px;">
+            <button class="btn-secondary" onclick="app.exportReportCSV()">
+              <i class="fa-solid fa-file-excel"></i> Ekspor CSV
+            </button>
+            <button class="btn-secondary" onclick="window.print()">
+              <i class="fa-solid fa-print"></i> Cetak Laporan
+            </button>
+          </div>
+        </div>
+
+        <!-- SEPARATED STATS AND DOCUMENTS -->
+        <div class="report-tabs">
+          <button class="report-tab-btn active" id="btn-rep-reseller" onclick="app.setReportTab('reseller')">
+            <i class="fa-solid fa-user-shield"></i> Laporan Penghasilan Saya (Reseller)
+          </button>
+          <button class="report-tab-btn" id="btn-rep-koperasi" onclick="app.setReportTab('koperasi')">
+            <i class="fa-solid fa-hotel"></i> Laporan Penghasilan Koperasi
+          </button>
+        </div>
+
+        <!-- REPORT CARD -->
+        <div class="card">
+          <div class="card-header" style="border-bottom: 1px solid var(--bg-dark-border); padding-bottom: 15px;">
+            <div>
+              <h2 class="card-title" id="report-doc-title">Dokumen Penghasilan Saya (Reseller)</h2>
+              <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" id="report-doc-period">Periode: Semua Waktu</p>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 12px; color: var(--text-secondary); block;">Total Pendapatan Terkumpul:</span>
+              <h2 style="font-size: 26px; font-weight: 800; color: var(--success); font-family: 'Outfit', sans-serif;" id="report-total-amount">Rp 0</h2>
+            </div>
+          </div>
+          
+          <!-- PRINT-ONLY DUMMY LOGO -->
+          <div class="print-header-only" style="display: none; padding: 20px 0; border-bottom: 2px solid #000;">
+            <h1 style="text-align: center;">LAPORAN FINANSIAL KONTER KOPERASI</h1>
+            <p style="text-align: center;" id="print-report-type"></p>
+            <p style="text-align: center;" id="print-report-date"></p>
+          </div>
+
+          <div class="table-responsive" style="margin-top: 20px;">
+            <table class="premium-table" id="report-table">
+              <thead>
+                <!-- Dynamic Headers -->
+              </thead>
+              <tbody id="report-tbody">
+                <!-- Dynamically filled -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- CUSTOMER MODAL (ADD / EDIT) -->
+  <div class="modal-overlay" id="customer-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-customer-title" style="font-size: 18px; font-weight: 700;">Tambah Pelanggan Baru</h2>
+        <button class="modal-close" onclick="app.closeCustomerModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <form id="customer-form">
+        <input type="hidden" id="cust-id-hidden">
+        
+        <div class="form-group">
+          <label for="cust-name">Nama Pelanggan</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="cust-name" class="form-control" placeholder="Masukkan nama pelanggan..." required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="cust-phone">Nomor HP / ID Tujuan</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <input type="text" id="cust-phone" class="form-control" placeholder="Contoh: 081234567890" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="cust-note">Catatan Tambahan (Opsional)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-clipboard"></i>
+            <input type="text" id="cust-note" class="form-control" placeholder="Contoh: Rumah Pak RT / Meteran listrik">
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="app.closeCustomerModal()" style="margin-top: 0;">Batal</button>
+          <button type="submit" class="btn-primary" style="width: auto; margin-top: 0;">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CDNs for Premium Graphs and Cloud Sync -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Load Local Cloud Config if exists -->
+  <script src="js/supabase-config.js"></script>
+
+  <!-- Load Database Catalog first -->
+  <script src="js/catalog.js"></script>
+  
+  <!-- Load Main Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>
