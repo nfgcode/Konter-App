@@ -54,13 +54,7 @@ class KonterTrackApp {
     if (savedCustomers) {
       this.customers = JSON.parse(savedCustomers);
     } else {
-      // Seed initial customers
-      this.customers = [
-        { id: "c1", name: "Budi Santoso", phone: "081234567890", note: "Tetangga sebelah kanan" },
-        { id: "c2", name: "Siti Aminah", phone: "085678901234", note: "Pemilik warung sebelah" },
-        { id: "c3", name: "Joko Widodo", phone: "089012345678", note: "Meteran PLN Token token ruko" },
-        { id: "c4", name: "Anisa Fitri", phone: "087712345678", note: "Gopay langganan" }
-      ];
+      this.customers = [];
       localStorage.setItem('konter_customers', JSON.stringify(this.customers));
     }
 
@@ -69,8 +63,8 @@ class KonterTrackApp {
     if (savedTransactions) {
       this.transactions = JSON.parse(savedTransactions);
     } else {
-      // Seed dummy transactions for demo
-      this.seedDummyTransactions();
+      this.transactions = [];
+      localStorage.setItem('konter_transactions', JSON.stringify(this.transactions));
     }
   }
 
@@ -743,7 +737,7 @@ class KonterTrackApp {
     document.getElementById('preview-selling-price').innerText = this.formatIDR(total);
   }
 
-  saveTransaction() {
+  async saveTransaction() {
     const customerName = document.getElementById('trans-customer-name').value.trim();
     const targetNumber = document.getElementById('trans-target-number').value.trim();
     const transDateVal = document.getElementById('trans-date').value;
@@ -838,11 +832,30 @@ class KonterTrackApp {
         };
         this.customers.push(newCust);
         localStorage.setItem('konter_customers', JSON.stringify(this.customers));
+        
+        // Sync to Firebase if connected
+        if (this.firebaseDb) {
+          try {
+            await this.firebaseDb.collection('konter_customers').doc(newCust.id).set(newCust);
+          } catch (e) {
+            console.error("Firebase save new customer error: ", e);
+          }
+        }
       }
     }
 
     this.transactions.push(newTx);
     localStorage.setItem('konter_transactions', JSON.stringify(this.transactions));
+
+    // Sync to Firebase if connected
+    if (this.firebaseDb) {
+      try {
+        await this.firebaseDb.collection('konter_transactions').doc(newTx.id).set(newTx);
+      } catch (e) {
+        console.error("Firebase save transaction error: ", e);
+        alert("Gagal sinkronisasi transaksi ke cloud Firebase, tapi tersimpan lokal.");
+      }
+    }
 
     alert("Transaksi penjualan berhasil disimpan dan dikunci!");
     
@@ -858,11 +871,22 @@ class KonterTrackApp {
     this.switchView('dashboard');
   }
 
-  deleteTransaction(id) {
+  async deleteTransaction(id) {
     const confirmation = confirm("Apakah Anda yakin ingin menghapus transaksi ini? Data laba akan disesuaikan kembali.");
     if (confirmation) {
       this.transactions = this.transactions.filter(t => t.id !== id);
       localStorage.setItem('konter_transactions', JSON.stringify(this.transactions));
+      
+      // Delete from Firebase if connected
+      if (this.firebaseDb) {
+        try {
+          await this.firebaseDb.collection('konter_transactions').doc(id).delete();
+        } catch (e) {
+          console.error("Firebase delete transaction error: ", e);
+          alert("Gagal menghapus transaksi dari cloud Firebase, tapi terhapus secara lokal.");
+        }
+      }
+      
       this.renderCurrentView();
     }
   }
@@ -943,7 +967,7 @@ class KonterTrackApp {
     document.getElementById('customer-modal').classList.remove('active');
   }
 
-  saveCustomer() {
+  async saveCustomer() {
     const id = document.getElementById('cust-id-hidden').value;
     const name = document.getElementById('cust-name').value.trim();
     const phone = document.getElementById('cust-phone').value.trim();
@@ -954,6 +978,7 @@ class KonterTrackApp {
       return;
     }
 
+    let customerObj = null;
     if (id) {
       // Edit existing
       const index = this.customers.findIndex(c => c.id === id);
@@ -961,6 +986,7 @@ class KonterTrackApp {
         this.customers[index].name = name;
         this.customers[index].phone = phone;
         this.customers[index].note = note;
+        customerObj = this.customers[index];
       }
     } else {
       // Create new
@@ -971,14 +997,26 @@ class KonterTrackApp {
         note: note
       };
       this.customers.push(newCust);
+      customerObj = newCust;
     }
 
     localStorage.setItem('konter_customers', JSON.stringify(this.customers));
+    
+    // Sync to Firebase if connected
+    if (this.firebaseDb && customerObj) {
+      try {
+        await this.firebaseDb.collection('konter_customers').doc(customerObj.id).set(customerObj);
+      } catch (e) {
+        console.error("Firebase save customer error: ", e);
+        alert("Gagal sinkronisasi data pelanggan ke cloud Firebase, tapi tersimpan lokal.");
+      }
+    }
+
     this.closeCustomerModal();
     this.renderCurrentView();
   }
 
-  deleteCustomer(id) {
+  async deleteCustomer(id) {
     const customer = this.customers.find(c => c.id === id);
     if (!customer) return;
 
@@ -986,6 +1024,17 @@ class KonterTrackApp {
     if (confirmation) {
       this.customers = this.customers.filter(c => c.id !== id);
       localStorage.setItem('konter_customers', JSON.stringify(this.customers));
+      
+      // Delete from Firebase if connected
+      if (this.firebaseDb) {
+        try {
+          await this.firebaseDb.collection('konter_customers').doc(id).delete();
+        } catch (e) {
+          console.error("Firebase delete customer error: ", e);
+          alert("Gagal menghapus data pelanggan dari cloud Firebase, tapi terhapus secara lokal.");
+        }
+      }
+      
       this.renderCurrentView();
     }
   }
