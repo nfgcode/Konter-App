@@ -156,6 +156,97 @@ class KonterTrackApp {
     localStorage.setItem('konter_transactions', JSON.stringify(this.transactions));
   }
 
+  async hashSHA256(str) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async verifyLogin(user, pass) {
+    const userHash = await this.hashSHA256(user);
+    const passHash = await this.hashSHA256(pass);
+
+    // 1. Try Firebase Firestore first if connected
+    if (this.firebaseDb) {
+      try {
+        const userDoc = await this.firebaseDb.collection('konter_users').doc(user).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          const currentPassHash = await this.hashSHA256(userData.password);
+          if (currentPassHash === passHash) {
+            return userData.role;
+          }
+        }
+      } catch (e) {
+        console.error("Firebase login check error: ", e);
+      }
+    }
+
+    // 2. Try Custom settings saved in LocalStorage
+    const savedAdminHash = localStorage.getItem('konter_admin_pass_hash');
+    const savedResellerHash = localStorage.getItem('konter_reseller_pass_hash');
+
+    const adminPassHash = savedAdminHash || "d0619a9eb221cf3e639686036181f083d09a0614138e6e580e55b4fb3ef696d7"; // default: koperasi123
+    const resellerPassHash = savedResellerHash || "785d0d9370776b92f7027d796781216999b7941fb6717a6a4220b33b7e750e39"; // default: reseller123
+
+    const defaultAdminUserHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // admin
+    const defaultResellerUserHash = "632129037c8651817dbcf26487e415fb5c4e976db57f00f074d28472506e7804"; // reseller
+
+    if (userHash === defaultAdminUserHash && passHash === adminPassHash) {
+      return 'admin';
+    } else if (userHash === defaultResellerUserHash && passHash === resellerPassHash) {
+      return 'reseller';
+    }
+
+    return null;
+  }
+
+  async updatePasswords() {
+    const adminPass = document.getElementById('settings-admin-pass').value.trim();
+    const resellerPass = document.getElementById('settings-reseller-pass').value.trim();
+
+    if (!adminPass && !resellerPass) {
+      alert("Masukkan minimal satu password baru!");
+      return;
+    }
+
+    try {
+      if (adminPass) {
+        const hash = await this.hashSHA256(adminPass);
+        localStorage.setItem('konter_admin_pass_hash', hash);
+        
+        if (this.firebaseDb) {
+          await this.firebaseDb.collection('konter_users').doc('admin').set({
+            username: 'admin',
+            password: adminPass,
+            role: 'admin'
+          });
+        }
+      }
+
+      if (resellerPass) {
+        const hash = await this.hashSHA256(resellerPass);
+        localStorage.setItem('konter_reseller_pass_hash', hash);
+
+        if (this.firebaseDb) {
+          await this.firebaseDb.collection('konter_users').doc('reseller').set({
+            username: 'reseller',
+            password: resellerPass,
+            role: 'reseller'
+          });
+        }
+      }
+
+      alert("Password baru berhasil disimpan!");
+      document.getElementById('settings-admin-pass').value = '';
+      document.getElementById('settings-reseller-pass').value = '';
+    } catch (e) {
+      console.error(e);
+      alert("Gagal menyimpan password baru: " + e.message);
+    }
+  }
+
   checkLogin() {
     const isLoggedIn = sessionStorage.getItem('konter_is_logged_in');
     const loginScreen = document.getElementById('login-screen');
@@ -198,18 +289,15 @@ class KonterTrackApp {
 
   setupEventListeners() {
     // Login Form Submit
-    document.getElementById('login-form').addEventListener('submit', (e) => {
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const user = document.getElementById('username').value.trim();
       const pass = document.getElementById('password').value.trim();
 
-      if (user === 'admin' && pass === 'koperasi123') {
+      const role = await this.verifyLogin(user, pass);
+      if (role) {
         sessionStorage.setItem('konter_is_logged_in', 'true');
-        sessionStorage.setItem('konter_user_role', 'admin');
-        this.checkLogin();
-      } else if (user === 'reseller' && pass === 'reseller123') {
-        sessionStorage.setItem('konter_is_logged_in', 'true');
-        sessionStorage.setItem('konter_user_role', 'reseller');
+        sessionStorage.setItem('konter_user_role', role);
         this.checkLogin();
       } else {
         alert('Username atau password salah! Hubungi Koperasi.');

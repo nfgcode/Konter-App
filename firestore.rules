@@ -8,5 +8,8 @@ service cloud.firestore {
     match /konter_transactions/{document} {
       allow read, write: if true;
     }
+    match /konter_users/{document} {
+      allow read, write: if true;
+    }
   }
 }

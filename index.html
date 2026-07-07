@@ -42,9 +42,8 @@
         </button>
       </form>
       
-      <div class="login-footer" style="line-height: 1.5; text-align: center;">
-        <div><strong>Admin:</strong> admin / koperasi123</div>
-        <div><strong>Reseller:</strong> reseller / reseller123</div>
+      <div class="login-footer" style="line-height: 1.5; text-align: center; color: var(--text-muted); font-size: 12px;">
+        Masukkan username dan password yang terdaftar untuk melanjutkan.
       </div>
     </div>
   </div>
@@ -522,6 +521,34 @@
           </div>
           <div style="font-size: 11px; color: var(--text-secondary); margin-top: 15px;">
             *Dengan menghubungkan Firebase, seluruh data transaksi dan pelanggan Anda akan disinkronkan secara aman ke Cloud Firestore secara gratis, sehingga Anda dapat mengakses data yang sama dari perangkat lain (HP / Laptop).
+          </div>
+        </div>
+
+        <!-- CHANGE PASSWORD CARD (ADMIN ONLY) -->
+        <div class="card admin-only" style="border-color: rgba(255, 184, 0, 0.2); background-color: rgba(255, 184, 0, 0.02); margin-bottom: 25px;">
+          <div class="card-header">
+            <h2 class="card-title" style="color: var(--accent);"><i class="fa-solid fa-key"></i> Pengaturan Password Akses</h2>
+          </div>
+          <div class="settings-grid" style="margin-top: 15px;">
+            <div class="form-group">
+              <label>Password Administrator Baru</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="settings-admin-pass" class="form-control" placeholder="Password baru admin">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Password Reseller Baru</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="settings-reseller-pass" class="form-control" placeholder="Password baru reseller">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 15px;">
+            <button type="button" class="btn-primary" style="width: auto; margin-top: 0;" onclick="app.updatePasswords()">
+              <i class="fa-solid fa-floppy-disk"></i> Simpan Password Baru
+            </button>
           </div>
         </div>
 

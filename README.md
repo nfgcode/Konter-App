@@ -26,9 +26,11 @@ Aplikasi ini sudah dilengkapi dengan script server dev bawaan menggunakan Python
     ```
 3.  Buka web browser Anda dan akses:
     👉 **[http://localhost:8000](http://localhost:8000)**
-4.  Gunakan kredensial default untuk masuk:
-    *   **Username:** `admin`
-    *   **Password:** `koperasi123`
+4.  Gunakan kredensial default untuk masuk pertama kali:
+    *   **Administrator:** `admin` / `koperasi123`
+    *   **Reseller:** `reseller` / `reseller123`
+    
+    *(Catatan: Kredensial tidak lagi disimpan dalam bentuk teks biasa di dalam kode untuk menutupi celah keamanan; melainkan dibandingkan menggunakan hashing SHA-256 secara aman. Administrator dapat mengubah password ini kapan saja dari menu Pengaturan).*
 
 ---
 
