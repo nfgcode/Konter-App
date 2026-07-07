@@ -156,11 +156,114 @@ class KonterTrackApp {
     localStorage.setItem('konter_transactions', JSON.stringify(this.transactions));
   }
 
-  async hashSHA256(str) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hash = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  async hashSHA256(ascii) {
+    // If Web Crypto is supported (HTTPS contexts), use it for maximum performance
+    if (window.crypto && window.crypto.subtle) {
+      try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(ascii);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch (e) {
+        console.warn("Subtle crypto failed, falling back to JS SHA-256: ", e);
+      }
+    }
+
+    // Fallback: Pure JS SHA-256 implementation (compatible with non-secure HTTP contexts)
+    function rightRotate(value, amount) {
+      return (value >>> amount) | (value << (32 - amount));
+    }
+    
+    var mathPow = Math.pow;
+    var maxWord = mathPow(2, 32);
+    var lengthProperty = 'length';
+    var i, j;
+    var result = '';
+
+    var words = [];
+    var asciiLength = ascii[lengthProperty] * 8;
+    
+    var hash = [];
+    var k = [];
+    var primeCounter = 0;
+
+    var isPrime = function(n) {
+      for (var factor = 2; factor * factor <= n; factor++) {
+        if (n % factor === 0) return false;
+      }
+      return true;
+    };
+
+    var getFractionalBits = function(n) {
+      return ((n - Math.floor(n)) * maxWord) | 0;
+    };
+
+    for (var candidate = 2; primeCounter < 64; candidate++) {
+      if (isPrime(candidate)) {
+        if (primeCounter < 8) {
+          hash[primeCounter] = getFractionalBits(mathPow(candidate, 1/2));
+        }
+        k[primeCounter] = getFractionalBits(mathPow(candidate, 1/3));
+        primeCounter++;
+      }
+    }
+    
+    ascii += '\x80';
+    while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+    for (i = 0; i < ascii[lengthProperty]; i++) {
+      j = ascii.charCodeAt(i);
+      if (j >> 8) return ''; // ASCII only
+      words[i >> 2] |= j << ((3 - i) % 4 * 8);
+    }
+    words[words[lengthProperty]] = ((asciiLength / maxWord) | 0);
+    words[words[lengthProperty]] = (asciiLength | 0);
+    
+    for (j = 0; j < words[lengthProperty]; ) {
+      var w = words.slice(j, j += 16);
+      
+      var a = hash[0], b = hash[1], c = hash[2], d = hash[3], e = hash[4], f = hash[5], g = hash[6], h = hash[7];
+      
+      for (i = 0; i < 64; i++) {
+        var wItem = w[i];
+        if (i >= 16) {
+          var s0 = rightRotate(w[i - 15], 7) ^ rightRotate(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+          var s1 = rightRotate(w[i - 2], 17) ^ rightRotate(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+          wItem = w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+        }
+        
+        var s1_e = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
+        var ch = (e & f) ^ (~e & g);
+        var temp1 = (h + s1_e + ch + k[i] + wItem) | 0;
+        var s0_a = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
+        var maj = (a & b) ^ (a & c) ^ (b & c);
+        var temp2 = (s0_a + maj) | 0;
+        
+        h = g;
+        g = f;
+        f = e;
+        e = (d + temp1) | 0;
+        d = c;
+        c = b;
+        b = a;
+        a = (temp1 + temp2) | 0;
+      }
+      
+      hash[0] = (hash[0] + a) | 0;
+      hash[1] = (hash[1] + b) | 0;
+      hash[2] = (hash[2] + c) | 0;
+      hash[3] = (hash[3] + d) | 0;
+      hash[4] = (hash[4] + e) | 0;
+      hash[5] = (hash[5] + f) | 0;
+      hash[6] = (hash[6] + g) | 0;
+      hash[7] = (hash[7] + h) | 0;
+    }
+    
+    for (i = 0; i < 8; i++) {
+      var s = (hash[i] >>> 0).toString(16);
+      while (s.length < 8) s = '0' + s;
+      result += s;
+    }
+    return result;
   }
 
   async verifyLogin(user, pass) {
@@ -291,7 +394,7 @@ class KonterTrackApp {
     // Login Form Submit
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const user = document.getElementById('username').value.trim();
+      const user = document.getElementById('username').value.trim().toLowerCase();
       const pass = document.getElementById('password').value.trim();
 
       const role = await this.verifyLogin(user, pass);
