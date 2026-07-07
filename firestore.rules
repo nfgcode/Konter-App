@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Aturan untuk data konter (bisa disesuaikan demi keamanan lebih lanjut)
+    match /konter_customers/{document} {
+      allow read, write: if true;
+    }
+    match /konter_transactions/{document} {
+      allow read, write: if true;
+    }
+  }
+}

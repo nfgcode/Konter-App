@@ -1,7 +1,7 @@
 # Konter-TrackApp
 > Sistem Pencatatan Penjualan Konter & Bagi Hasil Koperasi Transparan.
 
-Aplikasi web berbasis client-side (SPA) modern yang dibangun menggunakan **HTML5, CSS3, JavaScript (ES6)**. Aplikasi ini dirancang agar dapat di-deploy 100% gratis pada serverless hosting dan mendukung sinkronisasi database cloud Supabase secara gratis.
+Aplikasi web berbasis client-side (SPA) modern yang dibangun menggunakan **HTML5, CSS3, JavaScript (ES6)**. Aplikasi ini dirancang agar dapat di-deploy 100% gratis pada serverless hosting dan mendukung sinkronisasi database cloud Firebase Firestore secara gratis.
 
 ---
 
@@ -12,7 +12,7 @@ Aplikasi web berbasis client-side (SPA) modern yang dibangun menggunakan **HTML5
     *   **Pulsa:** Komisi tetap Koperasi (Rp 1.000) dan Reseller (Rp 1.000) + sisa pembulatan ke atas.
     *   **Topup & Tagihan:** Markup tetap Rp 3.000 penuh untuk reseller (koperasi Rp 0).
 *   **Laporan Laba Terpisah:** Tabular khusus untuk Laporan Laba Saya (Reseller) dan Laporan Laba Koperasi yang dapat diekspor ke `.csv` atau dicetak ke fisik/PDF.
-*   **Cloud Database Sync:** Terkoneksi ke **Supabase** secara gratis untuk sinkronisasi data real-time antar perangkat (HP & Laptop).
+*   **Cloud Database Sync:** Terkoneksi ke **Firebase Firestore** secara gratis untuk sinkronisasi data real-time antar perangkat (HP & Laptop).
 
 ---
 
@@ -32,45 +32,27 @@ Aplikasi ini sudah dilengkapi dengan script server dev bawaan menggunakan Python
 
 ---
 
-## ☁️ Cara Hubungkan ke Cloud Database (Supabase Free Tier)
+## ☁️ Cara Hubungkan ke Cloud Database (Firebase Firestore)
 Agar data konter tersinkronisasi otomatis di seluruh perangkat Anda (HP, Laptop, PC):
 
-1.  Buat akun dan project baru di **[Supabase](https://supabase.com/)** secara gratis.
-2.  Masuk ke menu **SQL Editor** Supabase, klik **New Query**, salin dan jalankan script SQL berikut:
-    ```sql
-    -- Tabel Pelanggan
-    CREATE TABLE konter_customers (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        note TEXT,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    -- Tabel Transaksi
-    CREATE TABLE konter_transactions (
-        id TEXT PRIMARY KEY,
-        date TIMESTAMPTZ NOT NULL,
-        customerName TEXT,
-        targetNumber TEXT NOT NULL,
-        productCode TEXT,
-        productName TEXT NOT NULL,
-        category TEXT NOT NULL,
-        modalPrice NUMERIC NOT NULL,
-        sellingPrice NUMERIC NOT NULL,
-        resellerProfit NUMERIC NOT NULL,
-        koperasiProfit NUMERIC NOT NULL,
-        roundingProfit NUMERIC NOT NULL,
-        type TEXT NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    -- Nonaktifkan RLS untuk mode pengembangan mandiri
-    ALTER TABLE konter_customers DISABLE ROW LEVEL SECURITY;
-    ALTER TABLE konter_transactions DISABLE ROW LEVEL SECURITY;
-    ```
-3.  Masuk ke **Settings (ikon roda gigi) -> API** di Supabase. Salin **Project URL** dan **Anon API Key**.
-4.  Buka aplikasi di web browser Anda -> Menu **Daftar Harga** -> Scroll ke bawah -> masukkan data URL dan Anon Key Anda di formulir **Sinkronisasi Cloud Database** -> Klik **Hubungkan & Sinkronkan**.
+1. Buat project baru di **[Firebase Console](https://console.firebase.google.com/)** secara gratis.
+2. Aktifkan **Cloud Firestore Database** di proyek Anda.
+3. Atur Firestore Security Rules Anda agar memperbolehkan akses baca dan tulis (misalnya menggunakan aturan di file `firestore.rules`):
+   ```javascript
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /konter_customers/{document} {
+         allow read, write: if true;
+       }
+       match /konter_transactions/{document} {
+         allow read, write: if true;
+       }
+     }
+   }
+   ```
+4. Daftarkan aplikasi web baru di proyek Firebase Anda untuk mendapatkan **Firebase SDK Configuration** (berupa objek JavaScript `firebaseConfig`).
+5. Buka aplikasi di web browser Anda -> Masuk ke menu **Pengaturan** (ikon roda gigi) -> Scroll ke bawah -> Tempelkan seluruh objek konfigurasi `firebaseConfig` Anda ke dalam kolom **Firebase Configuration (JSON / JS Object)** -> Klik **Hubungkan & Sinkronkan**.
 
 ---
 

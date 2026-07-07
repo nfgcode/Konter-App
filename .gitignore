@@ -1,5 +1,5 @@
-# Supabase Secure Keys Configuration
-js/supabase-config.js
+# Firebase Secure Keys Configuration
+js/firebase-config.js
 
 # Local logs and task execution logs
 *.log

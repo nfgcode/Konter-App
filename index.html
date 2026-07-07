@@ -480,35 +480,33 @@
         <!-- CLOUD DATABASE SYNC CARD -->
         <div class="card" style="border-color: rgba(0, 230, 118, 0.2); background-color: rgba(0, 230, 118, 0.02); margin-bottom: 25px;">
           <div class="card-header">
-            <h2 class="card-title" style="color: var(--success);"><i class="fa-solid fa-cloud-arrow-up"></i> Sinkronisasi Cloud Database (Supabase Free Tier)</h2>
+            <h2 class="card-title" style="color: var(--success);"><i class="fa-solid fa-cloud-arrow-up"></i> Sinkronisasi Cloud Database (Firebase Firestore)</h2>
             <div id="db-status-badge" class="badge" style="background-color: var(--text-muted); color: white; padding: 6px 12px; border-radius: 20px;">Offline (Penyimpanan Lokal)</div>
           </div>
-          <div class="settings-grid">
-            <div class="form-group">
-              <label for="db-supabase-url">Supabase Project URL</label>
-              <div class="input-wrapper">
-                <i class="fa-solid fa-link"></i>
-                <input type="text" id="db-supabase-url" class="form-control" placeholder="https://xxxx.supabase.co" style="padding-left: 42px;">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="db-supabase-key">Supabase Anon Key (API Key)</label>
-              <div class="input-wrapper">
-                <i class="fa-solid fa-key"></i>
-                <input type="password" id="db-supabase-key" class="form-control" placeholder="eyJhbGciOi..." style="padding-left: 42px;">
-              </div>
+          <div class="form-group" style="margin-top: 15px;">
+            <label for="db-firebase-config">Firebase Configuration (JSON / JS Object)</label>
+            <div class="input-wrapper" style="margin-top: 5px;">
+              <textarea id="db-firebase-config" class="form-control" placeholder='Tempel firebaseConfig Anda di sini, contoh:
+{
+  "apiKey": "AIzaSy...",
+  "authDomain": "konter-app.firebaseapp.com",
+  "projectId": "konter-app",
+  "storageBucket": "konter-app.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abcd1234"
+}' style="padding: 10px; height: 120px; font-family: monospace; font-size: 12px; resize: vertical; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-primary); width: 100%; box-sizing: border-box;"></textarea>
             </div>
           </div>
           <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="button" class="btn-primary" id="btn-connect-db" style="width: auto; margin-top: 0; background: linear-gradient(135deg, var(--success), #00b0ff); box-shadow: 0 4px 15px var(--success-glow);" onclick="app.connectSupabase()">
+            <button type="button" class="btn-primary" id="btn-connect-db" style="width: auto; margin-top: 0; background: linear-gradient(135deg, var(--success), #00b0ff); box-shadow: 0 4px 15px var(--success-glow);" onclick="app.connectFirebase()">
               <i class="fa-solid fa-circle-nodes"></i> Hubungkan & Sinkronkan
             </button>
-            <button type="button" class="btn-secondary" id="btn-disconnect-db" style="display: none;" onclick="app.disconnectSupabase()">
+            <button type="button" class="btn-secondary" id="btn-disconnect-db" style="display: none;" onclick="app.disconnectFirebase()">
               <i class="fa-solid fa-circle-xmark"></i> Putuskan Sambungan
             </button>
           </div>
           <div style="font-size: 11px; color: var(--text-secondary); margin-top: 15px;">
-            *Dengan menghubungkan Supabase, seluruh data transaksi dan pelanggan Anda akan disinkronkan secara aman ke cloud secara gratis, sehingga Anda dapat mengakses data yang sama dari perangkat lain (HP / Laptop).
+            *Dengan menghubungkan Firebase, seluruh data transaksi dan pelanggan Anda akan disinkronkan secara aman ke Cloud Firestore secara gratis, sehingga Anda dapat mengakses data yang sama dari perangkat lain (HP / Laptop).
           </div>
         </div>
 
@@ -671,10 +669,12 @@
 
   <!-- CDNs for Premium Graphs and Cloud Sync -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Firebase Compat App and Firestore SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <!-- Load Local Cloud Config if exists -->
-  <script src="js/supabase-config.js"></script>
+  <script src="js/firebase-config.js"></script>
 
   <!-- Load Database Catalog first -->
   <script src="js/catalog.js"></script>

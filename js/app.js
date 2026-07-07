@@ -14,9 +14,9 @@ class KonterTrackApp {
     this.catalogTab = 'Semua';
     this.reportTab = 'reseller';
     this.chartInstance = null;
-    this.supabaseClient = null;
-    this.supabaseUrl = '';
-    this.supabaseKey = '';
+    this.firebaseApp = null;
+    this.firebaseDb = null;
+    this.firebaseConfigString = '';
   }
 
   init() {
@@ -28,8 +28,8 @@ class KonterTrackApp {
     // Set default datetime to form input
     this.setDefaultFormDate();
 
-    // Trigger silent Supabase connection attempt on start
-    this.connectSupabase(true);
+    // Trigger silent Firebase connection attempt on start
+    this.connectFirebase(true);
   }
 
   loadState() {
@@ -1261,52 +1261,86 @@ class KonterTrackApp {
     return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  // --- SUPABASE SYNC METHODS ---
-  async connectSupabase(silent = false) {
-    const urlInput = document.getElementById('db-supabase-url');
-    const keyInput = document.getElementById('db-supabase-key');
+  // --- FIREBASE SYNC METHODS ---
+  parseFirebaseConfig(str) {
+    str = str.trim();
+    // Remove variable declaration if present (e.g. const firebaseConfig = or var config =)
+    str = str.replace(/^(const|let|var)\s+\w+\s*=\s*/, '');
+    // Remove trailing semicolon if present
+    if (str.endsWith(';')) {
+      str = str.substring(0, str.length - 1);
+    }
     
-    let url = urlInput ? urlInput.value.trim() : '';
-    let key = keyInput ? keyInput.value.trim() : '';
-    
-    if (!url || !key) {
-      if (typeof SUPABASE_CONFIG !== 'undefined' && SUPABASE_CONFIG.url && SUPABASE_CONFIG.key) {
-        url = SUPABASE_CONFIG.url.trim();
-        key = SUPABASE_CONFIG.key.trim();
+    try {
+      return JSON.parse(str);
+    } catch (e) {
+      try {
+        const fn = new Function(`return (${str});`);
+        return fn();
+      } catch (err) {
+        throw new Error("Format konfigurasi Firebase tidak valid. Pastikan itu adalah JSON atau Object literal yang valid.");
+      }
+    }
+  }
+
+  async connectFirebase(silent = false) {
+    const configInput = document.getElementById('db-firebase-config');
+    let configStr = configInput ? configInput.value.trim() : '';
+
+    let configObj = null;
+
+    if (!configStr) {
+      if (typeof FIREBASE_CONFIG !== 'undefined' && Object.keys(FIREBASE_CONFIG).length > 0) {
+        configObj = FIREBASE_CONFIG;
       } else {
-        url = localStorage.getItem('konter_supabase_url') || '';
-        key = localStorage.getItem('konter_supabase_key') || '';
+        const savedConfig = localStorage.getItem('konter_firebase_config');
+        if (savedConfig) {
+          try {
+            configObj = JSON.parse(savedConfig);
+          } catch (e) {}
+        }
+      }
+    } else {
+      try {
+        configObj = this.parseFirebaseConfig(configStr);
+      } catch (err) {
+        if (!silent) alert(err.message);
+        return;
       }
     }
 
-    if (!url || !key) {
-      if (!silent) alert("Mohon masukkan Project URL dan API Key Supabase!");
+    if (!configObj || !configObj.projectId || !configObj.apiKey) {
+      if (!silent) alert("Mohon masukkan Firebase Configuration (minimal berisi apiKey dan projectId)!");
       return;
     }
 
     try {
-      if (typeof supabase === 'undefined') {
-        throw new Error("Pustaka Supabase CDN belum termuat. Coba muat ulang halaman.");
+      if (typeof firebase === 'undefined') {
+        throw new Error("Pustaka Firebase CDN belum termuat. Coba muat ulang halaman.");
       }
 
-      this.supabaseUrl = url;
-      this.supabaseKey = key;
-      this.supabaseClient = supabase.createClient(url, key);
+      // Delete existing app to re-initialize with new config if needed
+      if (firebase.apps.length > 0) {
+        await firebase.app().delete();
+      }
+
+      this.firebaseApp = firebase.initializeApp(configObj);
+      this.firebaseDb = firebase.firestore();
+      this.firebaseConfigString = JSON.stringify(configObj, null, 2);
 
       // Simpan ke localStorage
-      localStorage.setItem('konter_supabase_url', url);
-      localStorage.setItem('konter_supabase_key', key);
+      localStorage.setItem('konter_firebase_config', this.firebaseConfigString);
 
       // Sinkronisasi data
-      await this.syncWithSupabase();
+      await this.syncWithFirebase();
 
       // Update UI Status
       this.updateDbStatus(true);
-      if (!silent) alert("Koneksi Supabase berhasil terhubung dan disinkronkan!");
+      if (!silent) alert("Koneksi Firebase Firestore berhasil terhubung dan disinkronkan!");
     } catch (err) {
       console.error(err);
       this.updateDbStatus(false);
-      if (!silent) alert("Koneksi Supabase gagal! Silakan periksa URL & API Key Anda. Detail: " + err.message);
+      if (!silent) alert("Koneksi Firebase gagal! Detail: " + err.message);
     }
   }
 
@@ -1314,48 +1348,57 @@ class KonterTrackApp {
     const badge = document.getElementById('db-status-badge');
     const btnConnect = document.getElementById('btn-connect-db');
     const btnDisconnect = document.getElementById('btn-disconnect-db');
-    const urlInput = document.getElementById('db-supabase-url');
-    const keyInput = document.getElementById('db-supabase-key');
+    const configInput = document.getElementById('db-firebase-config');
 
     if (badge) {
       if (isConnected) {
-        badge.innerText = "Online (Terhubung Supabase)";
+        badge.innerText = "Online (Terhubung Firebase)";
         badge.style.backgroundColor = "var(--success)";
         if (btnConnect) btnConnect.style.display = 'none';
         if (btnDisconnect) btnDisconnect.style.display = 'inline-flex';
-        if (urlInput) { urlInput.value = this.supabaseUrl; urlInput.disabled = true; }
-        if (keyInput) { keyInput.value = "••••••••••••••••••••••••••••"; keyInput.disabled = true; }
+        if (configInput) {
+          configInput.value = "/* Firebase Connected - Configuration Stored Securely */";
+          configInput.disabled = true;
+        }
       } else {
         badge.innerText = "Offline (Penyimpanan Lokal)";
         badge.style.backgroundColor = "var(--text-muted)";
         if (btnConnect) btnConnect.style.display = 'inline-flex';
         if (btnDisconnect) btnDisconnect.style.display = 'none';
-        if (urlInput) { urlInput.value = ''; urlInput.disabled = false; }
-        if (keyInput) { keyInput.value = ''; keyInput.disabled = false; }
+        if (configInput) {
+          configInput.value = this.firebaseConfigString || '';
+          configInput.disabled = false;
+        }
       }
     }
   }
 
-  disconnectSupabase() {
-    this.supabaseClient = null;
-    this.supabaseUrl = '';
-    this.supabaseKey = '';
-    localStorage.removeItem('konter_supabase_url');
-    localStorage.removeItem('konter_supabase_key');
+  async disconnectFirebase() {
+    this.firebaseApp = null;
+    this.firebaseDb = null;
+    this.firebaseConfigString = '';
+    localStorage.removeItem('konter_firebase_config');
+    try {
+      if (firebase.apps.length > 0) {
+        await firebase.app().delete();
+      }
+    } catch (e) {
+      console.error(e);
+    }
     this.updateDbStatus(false);
-    alert("Koneksi Supabase diputuskan. Kembali ke mode penyimpanan lokal.");
+    alert("Koneksi Firebase diputuskan. Kembali ke mode penyimpanan lokal.");
   }
 
-  async syncWithSupabase() {
-    if (!this.supabaseClient) return;
+  async syncWithFirebase() {
+    if (!this.firebaseDb) return;
 
     try {
       // 1. Sinkronisasi Pelanggan (Customers)
-      const { data: remoteCustomers, error: custError } = await this.supabaseClient
-        .from('konter_customers')
-        .select('*');
-
-      if (custError) throw custError;
+      const custSnapshot = await this.firebaseDb.collection('konter_customers').get();
+      const remoteCustomers = [];
+      custSnapshot.forEach(doc => {
+        remoteCustomers.push(doc.data());
+      });
 
       if (remoteCustomers && remoteCustomers.length > 0) {
         const localMap = new Map(this.customers.map(c => [c.id, c]));
@@ -1370,18 +1413,20 @@ class KonterTrackApp {
       const newLocalCustomers = this.customers.filter(c => !remoteIds.has(c.id));
       
       if (newLocalCustomers.length > 0) {
-        const { error: insertError } = await this.supabaseClient
-          .from('konter_customers')
-          .insert(newLocalCustomers);
-        if (insertError) throw insertError;
+        const batch = this.firebaseDb.batch();
+        newLocalCustomers.forEach(c => {
+          const docRef = this.firebaseDb.collection('konter_customers').doc(c.id);
+          batch.set(docRef, c);
+        });
+        await batch.commit();
       }
 
       // 2. Sinkronisasi Transaksi
-      const { data: remoteTrans, error: txError } = await this.supabaseClient
-        .from('konter_transactions')
-        .select('*');
-
-      if (txError) throw txError;
+      const txSnapshot = await this.firebaseDb.collection('konter_transactions').get();
+      const remoteTrans = [];
+      txSnapshot.forEach(doc => {
+        remoteTrans.push(doc.data());
+      });
 
       if (remoteTrans && remoteTrans.length > 0) {
         const localTxMap = new Map(this.transactions.map(t => [t.id, t]));
@@ -1396,16 +1441,22 @@ class KonterTrackApp {
       const newLocalTrans = this.transactions.filter(t => !remoteTxIds.has(t.id));
 
       if (newLocalTrans.length > 0) {
-        const { error: insertTxError } = await this.supabaseClient
-          .from('konter_transactions')
-          .insert(newLocalTrans);
-        if (insertTxError) throw insertTxError;
+        const batchSize = 400; // max batch is 500
+        for (let i = 0; i < newLocalTrans.length; i += batchSize) {
+          const batch = this.firebaseDb.batch();
+          const chunk = newLocalTrans.slice(i, i + batchSize);
+          chunk.forEach(t => {
+            const docRef = this.firebaseDb.collection('konter_transactions').doc(t.id);
+            batch.set(docRef, t);
+          });
+          await batch.commit();
+        }
       }
 
       this.renderCurrentView();
     } catch (err) {
       console.error("Sync Error: ", err);
-      alert("Peringatan: Gagal sinkronisasi data cloud. Pastikan Anda telah membuat tabel 'konter_customers' dan 'konter_transactions' di SQL Editor Supabase Anda!");
+      alert("Peringatan: Gagal sinkronisasi data cloud Firebase Firestore. Pastikan Firebase Anda sudah dikonfigurasi dengan benar dan Firestore Rules Anda memperbolehkan akses!");
     }
   }
 }
