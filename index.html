@@ -42,8 +42,9 @@
         </button>
       </form>
       
-      <div class="login-footer">
-        Default: admin / koperasi123
+      <div class="login-footer" style="line-height: 1.5; text-align: center;">
+        <div><strong>Admin:</strong> admin / koperasi123</div>
+        <div><strong>Reseller:</strong> reseller / reseller123</div>
       </div>
     </div>
   </div>
@@ -79,10 +80,10 @@
       
       <div class="sidebar-footer">
         <div class="user-profile">
-          <div class="avatar">AD</div>
+          <div class="avatar" id="user-avatar">AD</div>
           <div class="user-info">
-            <span class="user-name">Administrator</span>
-            <span class="user-role">Konter Owner & Reseller</span>
+            <span class="user-name" id="user-display-name">Administrator</span>
+            <span class="user-role" id="user-display-role">Konter Owner & Reseller</span>
           </div>
         </div>
         <button id="logout-btn" class="btn-logout">
@@ -147,14 +148,14 @@
             </div>
           </div>
           
-          <div class="stat-card">
+          <div class="stat-card admin-only">
             <div class="stat-icon icon-yellow">
               <i class="fa-solid fa-building-columns"></i>
             </div>
             <div class="stat-label">Laba Bersih Koperasi</div>
             <div class="stat-value" style="color: var(--accent);" id="stat-laba-koperasi">Rp 0</div>
             <div class="stat-trend trend-up">
-              <i class="fa-solid fa-piggy-bank"></i> Rp 1.000 / transaksi pulsa
+              <i class="fa-solid fa-piggy-bank"></i> Rp 1.000 / semua transaksi
             </div>
           </div>
         </div>
@@ -238,7 +239,7 @@
                   <th>Harga Modal</th>
                   <th>Harga Jual</th>
                   <th>Laba Saya</th>
-                  <th>Laba Kop</th>
+                  <th class="admin-only">Laba Kop</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -384,7 +385,7 @@
               <span class="preview-value" id="preview-rounding" style="color: var(--success);">Rp 0</span>
             </div>
 
-            <div class="preview-row">
+            <div class="preview-row admin-only">
               <span class="preview-label">Komisi Hak Koperasi:</span>
               <span class="preview-value" id="preview-koperasi" style="color: var(--accent);">Rp 0</span>
             </div>
@@ -443,7 +444,7 @@
             <h2 class="card-title" style="color: var(--secondary);"><i class="fa-solid fa-gears"></i> Aturan Markup Profit Global</h2>
           </div>
           <div class="settings-grid">
-            <div class="form-group">
+            <div class="form-group admin-only">
               <label>Bagi Hasil Pulsa (Koperasi)</label>
               <div class="input-wrapper">
                 <i class="fa-solid fa-rupiah-sign"></i>
@@ -457,11 +458,25 @@
                 <input type="number" id="global-reseller-pulsa-profit" class="form-control" value="1000" style="padding-left: 32px;" onchange="app.saveGlobalMarkupSettings()">
               </div>
             </div>
+            <div class="form-group admin-only">
+              <label>Bagi Hasil Topup (Koperasi)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-rupiah-sign"></i>
+                <input type="number" id="global-kop-topup-profit" class="form-control" value="1000" style="padding-left: 32px;" onchange="app.saveGlobalMarkupSettings()">
+              </div>
+            </div>
             <div class="form-group">
               <label>Markup Topup (Saya / Reseller)</label>
               <div class="input-wrapper">
                 <i class="fa-solid fa-rupiah-sign"></i>
                 <input type="number" id="global-reseller-topup-profit" class="form-control" value="3000" style="padding-left: 32px;" onchange="app.saveGlobalMarkupSettings()">
+              </div>
+            </div>
+            <div class="form-group admin-only">
+              <label>Bagi Hasil Tagihan (Koperasi)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-rupiah-sign"></i>
+                <input type="number" id="global-kop-tagihan-profit" class="form-control" value="1000" style="padding-left: 32px;" onchange="app.saveGlobalMarkupSettings()">
               </div>
             </div>
             <div class="form-group">
@@ -478,7 +493,7 @@
         </div>
 
         <!-- CLOUD DATABASE SYNC CARD -->
-        <div class="card" style="border-color: rgba(0, 230, 118, 0.2); background-color: rgba(0, 230, 118, 0.02); margin-bottom: 25px;">
+        <div class="card admin-only" style="border-color: rgba(0, 230, 118, 0.2); background-color: rgba(0, 230, 118, 0.02); margin-bottom: 25px;">
           <div class="card-header">
             <h2 class="card-title" style="color: var(--success);"><i class="fa-solid fa-cloud-arrow-up"></i> Sinkronisasi Cloud Database (Firebase Firestore)</h2>
             <div id="db-status-badge" class="badge" style="background-color: var(--text-muted); color: white; padding: 6px 12px; border-radius: 20px;">Offline (Penyimpanan Lokal)</div>
@@ -582,7 +597,7 @@
           <button class="report-tab-btn active" id="btn-rep-reseller" onclick="app.setReportTab('reseller')">
             <i class="fa-solid fa-user-shield"></i> Laporan Penghasilan Saya (Reseller)
           </button>
-          <button class="report-tab-btn" id="btn-rep-koperasi" onclick="app.setReportTab('koperasi')">
+          <button class="report-tab-btn admin-only" id="btn-rep-koperasi" onclick="app.setReportTab('koperasi')">
             <i class="fa-solid fa-hotel"></i> Laporan Penghasilan Koperasi
           </button>
         </div>

@@ -5,6 +5,8 @@ class KonterTrackApp {
     this.customers = [];
     this.markupSettings = {
       koperasiPulsa: 1000,
+      koperasiTopup: 1000,
+      koperasiTagihan: 1000,
       resellerPulsa: 1000,
       resellerTopup: 3000,
       resellerTagihan: 3000
@@ -36,7 +38,15 @@ class KonterTrackApp {
     // Load markup settings
     const savedSettings = localStorage.getItem('konter_markup_settings');
     if (savedSettings) {
-      this.markupSettings = JSON.parse(savedSettings);
+      this.markupSettings = {
+        koperasiPulsa: 1000,
+        koperasiTopup: 1000,
+        koperasiTagihan: 1000,
+        resellerPulsa: 1000,
+        resellerTopup: 3000,
+        resellerTagihan: 3000,
+        ...JSON.parse(savedSettings)
+      };
     }
 
     // Load customers
@@ -112,10 +122,10 @@ class KonterTrackApp {
         productName: "Token PLN 100.000",
         category: "Tagihan",
         modalPrice: 101850,
-        sellingPrice: 105000,
+        sellingPrice: 105850,
         resellerProfit: 3000,
-        koperasiProfit: 0,
-        roundingProfit: 150,
+        koperasiProfit: 1000,
+        roundingProfit: 0,
         type: "auto"
       },
       {
@@ -129,8 +139,8 @@ class KonterTrackApp {
         modalPrice: 50880,
         sellingPrice: 55000,
         resellerProfit: 3000,
-        koperasiProfit: 0,
-        roundingProfit: 1120,
+        koperasiProfit: 1000,
+        roundingProfit: 120,
         type: "auto"
       },
       {
@@ -160,10 +170,35 @@ class KonterTrackApp {
     if (isLoggedIn === 'true') {
       loginScreen.style.display = 'none';
       appScreen.style.display = 'flex';
+      
+      const role = sessionStorage.getItem('konter_user_role') || 'admin';
+      const userAvatar = document.getElementById('user-avatar');
+      const userDisplayName = document.getElementById('user-display-name');
+      const userDisplayRole = document.getElementById('user-display-role');
+
+      if (role === 'admin') {
+        document.body.classList.remove('role-reseller');
+        document.body.classList.add('role-admin');
+        if (userAvatar) userAvatar.innerText = 'AD';
+        if (userDisplayName) userDisplayName.innerText = 'Administrator';
+        if (userDisplayRole) userDisplayRole.innerText = 'Koperasi Admin';
+      } else {
+        document.body.classList.remove('role-admin');
+        document.body.classList.add('role-reseller');
+        if (userAvatar) userAvatar.innerText = 'RS';
+        if (userDisplayName) userDisplayName.innerText = 'Reseller Partner';
+        if (userDisplayRole) userDisplayRole.innerText = 'Reseller Operator';
+        
+        if (this.reportTab === 'koperasi') {
+          this.reportTab = 'reseller';
+        }
+      }
+      
       this.renderCurrentView();
     } else {
       loginScreen.style.display = 'flex';
       appScreen.style.display = 'none';
+      document.body.classList.remove('role-admin', 'role-reseller');
     }
   }
 
@@ -176,6 +211,11 @@ class KonterTrackApp {
 
       if (user === 'admin' && pass === 'koperasi123') {
         sessionStorage.setItem('konter_is_logged_in', 'true');
+        sessionStorage.setItem('konter_user_role', 'admin');
+        this.checkLogin();
+      } else if (user === 'reseller' && pass === 'reseller123') {
+        sessionStorage.setItem('konter_is_logged_in', 'true');
+        sessionStorage.setItem('konter_user_role', 'reseller');
         this.checkLogin();
       } else {
         alert('Username atau password salah! Hubungi Koperasi.');
@@ -422,26 +462,32 @@ class KonterTrackApp {
       this.chartInstance.destroy();
     }
 
+    const isAdmin = sessionStorage.getItem('konter_user_role') === 'admin';
+    const datasets = [
+      {
+        label: 'Keuntungan Reseller (Saya)',
+        data: resellerData.length > 0 ? resellerData : [0],
+        backgroundColor: '#00e676',
+        borderRadius: 6,
+        borderSkipped: false
+      }
+    ];
+
+    if (isAdmin) {
+      datasets.push({
+        label: 'Keuntungan Koperasi',
+        data: koperasiData.length > 0 ? koperasiData : [0],
+        backgroundColor: '#ffb800',
+        borderRadius: 6,
+        borderSkipped: false
+      });
+    }
+
     this.chartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: labels.length > 0 ? labels : ['Belum Ada Data'],
-        datasets: [
-          {
-            label: 'Keuntungan Reseller (Saya)',
-            data: resellerData.length > 0 ? resellerData : [0],
-            backgroundColor: '#00e676',
-            borderRadius: 6,
-            borderSkipped: false
-          },
-          {
-            label: 'Keuntungan Koperasi',
-            data: koperasiData.length > 0 ? koperasiData : [0],
-            backgroundColor: '#ffb800',
-            borderRadius: 6,
-            borderSkipped: false
-          }
-        ]
+        datasets: datasets
       },
       options: {
         responsive: true,
@@ -483,7 +529,13 @@ class KonterTrackApp {
     // Fill categories settings configuration fields
     document.getElementById('global-kop-pulsa-profit').value = this.markupSettings.koperasiPulsa;
     document.getElementById('global-reseller-pulsa-profit').value = this.markupSettings.resellerPulsa;
+    if (document.getElementById('global-kop-topup-profit')) {
+      document.getElementById('global-kop-topup-profit').value = this.markupSettings.koperasiTopup || 1000;
+    }
     document.getElementById('global-reseller-topup-profit').value = this.markupSettings.resellerTopup;
+    if (document.getElementById('global-kop-tagihan-profit')) {
+      document.getElementById('global-kop-tagihan-profit').value = this.markupSettings.koperasiTagihan || 1000;
+    }
     document.getElementById('global-reseller-tagihan-profit').value = this.markupSettings.resellerTagihan;
 
     this.setFormCategory(this.formCategory);
@@ -621,11 +673,14 @@ class KonterTrackApp {
       return;
     }
 
+    const isAdmin = sessionStorage.getItem('konter_user_role') === 'admin';
     if (this.formCategory === 'Pulsa') {
       // PULSA RULE: split Rp 1,000 Reseller, Rp 1,000 Koperasi, then round up.
       resellerProfit = Number(this.markupSettings.resellerPulsa);
       koperasiProfit = Number(this.markupSettings.koperasiPulsa);
-      descSpan.innerHTML = `Bagi hasil <strong>PULSA</strong>: Koperasi Rp ${koperasiProfit.toLocaleString()} &amp; Reseller Rp ${resellerProfit.toLocaleString()} per transaksi (ditambah bonus pembulatan).`;
+      descSpan.innerHTML = isAdmin 
+        ? `Bagi hasil <strong>PULSA</strong>: Koperasi Rp ${koperasiProfit.toLocaleString()} &amp; Reseller Rp ${resellerProfit.toLocaleString()} per transaksi (ditambah bonus pembulatan).`
+        : `Bagi hasil <strong>PULSA</strong>: Reseller Rp ${resellerProfit.toLocaleString()} per transaksi (ditambah bonus pembulatan).`;
 
       if (isManual) {
         sellingPrice = manualSellPrice;
@@ -640,34 +695,38 @@ class KonterTrackApp {
         roundingProfit = sellingPrice - baseModal - resellerProfit - koperasiProfit;
       }
     } else if (this.formCategory === 'Topup') {
-      // TOPUP RULE: Rp 3,000 Reseller markup, Rp 0 Koperasi markup, then round up.
+      // TOPUP RULE: Rp 3,000 Reseller markup, Rp 1,000 Koperasi markup, then round up.
       resellerProfit = Number(this.markupSettings.resellerTopup);
-      koperasiProfit = 0;
-      descSpan.innerHTML = `Bagi hasil <strong>TOPUP</strong>: Seluruh keuntungan markup Rp ${resellerProfit.toLocaleString()} sepenuhnya milik Reseller (koperasi Rp 0).`;
+      koperasiProfit = Number(this.markupSettings.koperasiTopup || 1000);
+      descSpan.innerHTML = isAdmin
+        ? `Bagi hasil <strong>TOPUP</strong>: Koperasi Rp ${koperasiProfit.toLocaleString()} &amp; Reseller Rp ${resellerProfit.toLocaleString()} per transaksi (ditambah bonus pembulatan).`
+        : `Bagi hasil <strong>TOPUP</strong>: Reseller Rp ${resellerProfit.toLocaleString()} per transaksi (ditambah bonus pembulatan).`;
 
       if (isManual) {
         sellingPrice = manualSellPrice;
         const totalProfitKotor = sellingPrice - baseModal;
-        roundingProfit = totalProfitKotor - resellerProfit;
+        roundingProfit = totalProfitKotor - (resellerProfit + koperasiProfit);
       } else {
-        const baseSellingPrice = baseModal + resellerProfit;
+        const baseSellingPrice = baseModal + resellerProfit + koperasiProfit;
         // Round UP to nearest thousand
         sellingPrice = Math.ceil(baseSellingPrice / 1000) * 1000;
-        roundingProfit = sellingPrice - baseModal - resellerProfit;
+        roundingProfit = sellingPrice - baseModal - resellerProfit - koperasiProfit;
       }
     } else if (this.formCategory === 'Tagihan') {
-      // TAGIHAN RULE: Rp 3,000 Reseller markup, Rp 0 Koperasi markup. No round up because bills are precise.
+      // TAGIHAN RULE: Rp 3,000 Reseller markup, Rp 1,000 Koperasi markup. No round up because bills are precise.
       resellerProfit = Number(this.markupSettings.resellerTagihan);
-      koperasiProfit = 0;
-      descSpan.innerHTML = `Bagi hasil <strong>TAGIHAN</strong>: Seluruh keuntungan markup Rp ${resellerProfit.toLocaleString()} sepenuhnya milik Reseller (koperasi Rp 0). Tidak dibulatkan karena tagihan bersifat presisi.`;
+      koperasiProfit = Number(this.markupSettings.koperasiTagihan || 1000);
+      descSpan.innerHTML = isAdmin
+        ? `Bagi hasil <strong>TAGIHAN</strong>: Koperasi Rp ${koperasiProfit.toLocaleString()} &amp; Reseller Rp ${resellerProfit.toLocaleString()} per transaksi (tanpa pembulatan).`
+        : `Bagi hasil <strong>TAGIHAN</strong>: Reseller Rp ${resellerProfit.toLocaleString()} per transaksi (tanpa pembulatan).`;
 
       if (isManual) {
         sellingPrice = manualSellPrice;
         const totalProfitKotor = sellingPrice - baseModal;
-        roundingProfit = totalProfitKotor - resellerProfit;
+        roundingProfit = totalProfitKotor - (resellerProfit + koperasiProfit);
       } else {
         // Auto Tagihan: Bill + markup (no rounding up)
-        sellingPrice = baseModal + resellerProfit;
+        sellingPrice = baseModal + resellerProfit + koperasiProfit;
         roundingProfit = 0;
       }
     }
@@ -725,22 +784,22 @@ class KonterTrackApp {
       }
     } else if (this.formCategory === 'Topup') {
       resellerProfit = Number(this.markupSettings.resellerTopup);
-      koperasiProfit = 0;
+      koperasiProfit = Number(this.markupSettings.koperasiTopup || 1000);
       if (isManual) {
         sellingPrice = manualSellPrice;
-        roundingProfit = (sellingPrice - modalInputVal) - resellerProfit;
+        roundingProfit = (sellingPrice - modalInputVal) - (resellerProfit + koperasiProfit);
       } else {
-        sellingPrice = Math.ceil((modalInputVal + resellerProfit) / 1000) * 1000;
-        roundingProfit = sellingPrice - modalInputVal - resellerProfit;
+        sellingPrice = Math.ceil((modalInputVal + resellerProfit + koperasiProfit) / 1000) * 1000;
+        roundingProfit = sellingPrice - modalInputVal - resellerProfit - koperasiProfit;
       }
     } else if (this.formCategory === 'Tagihan') {
       resellerProfit = Number(this.markupSettings.resellerTagihan);
-      koperasiProfit = 0;
+      koperasiProfit = Number(this.markupSettings.koperasiTagihan || 1000);
       if (isManual) {
         sellingPrice = manualSellPrice;
-        roundingProfit = (sellingPrice - modalInputVal) - resellerProfit;
+        roundingProfit = (sellingPrice - modalInputVal) - (resellerProfit + koperasiProfit);
       } else {
-        sellingPrice = modalInputVal + resellerProfit;
+        sellingPrice = modalInputVal + resellerProfit + koperasiProfit;
         roundingProfit = 0;
       }
     }
@@ -949,11 +1008,19 @@ class KonterTrackApp {
   saveGlobalMarkupSettings() {
     const kopPulsa = Number(document.getElementById('global-kop-pulsa-profit').value || 0);
     const resellerPulsa = Number(document.getElementById('global-reseller-pulsa-profit').value || 0);
+    
+    const kopTopupInput = document.getElementById('global-kop-topup-profit');
+    const kopTopup = kopTopupInput ? Number(kopTopupInput.value || 0) : (this.markupSettings.koperasiTopup || 1000);
     const resellerTopup = Number(document.getElementById('global-reseller-topup-profit').value || 0);
+    
+    const kopTagihanInput = document.getElementById('global-kop-tagihan-profit');
+    const kopTagihan = kopTagihanInput ? Number(kopTagihanInput.value || 0) : (this.markupSettings.koperasiTagihan || 1000);
     const resellerTagihan = Number(document.getElementById('global-reseller-tagihan-profit').value || 0);
 
     this.markupSettings = {
       koperasiPulsa: kopPulsa,
+      koperasiTopup: kopTopup,
+      koperasiTagihan: kopTagihan,
       resellerPulsa: resellerPulsa,
       resellerTopup: resellerTopup,
       resellerTagihan: resellerTagihan
@@ -1006,8 +1073,11 @@ class KonterTrackApp {
         roundingDesc = roundingDiff > 0 ? `+Rp ${roundingDiff.toLocaleString()} (Pembulatan)` : 'Pas';
       } else if (p.category === 'Topup') {
         const resellerProfit = this.markupSettings.resellerTopup;
-        markupAmount = resellerProfit;
-        markupDesc = `Reseller +Rp ${resellerProfit.toLocaleString()} (Koperasi Rp 0)`;
+        const koperasiProfit = this.markupSettings.koperasiTopup || 1000;
+        markupAmount = resellerProfit + koperasiProfit;
+        markupDesc = isAdmin
+          ? `Kop +Rp ${koperasiProfit.toLocaleString()} | Reseller +Rp ${resellerProfit.toLocaleString()}`
+          : `Reseller +Rp ${resellerProfit.toLocaleString()}`;
         
         const rawJual = p.base_price + markupAmount;
         finalPrice = Math.ceil(rawJual / 1000) * 1000;
@@ -1015,8 +1085,11 @@ class KonterTrackApp {
         roundingDesc = roundingDiff > 0 ? `+Rp ${roundingDiff.toLocaleString()} (Pembulatan)` : 'Pas';
       } else if (p.category === 'Tagihan') {
         const resellerProfit = this.markupSettings.resellerTagihan;
-        markupAmount = resellerProfit;
-        markupDesc = `Reseller +Rp ${resellerProfit.toLocaleString()} (Koperasi Rp 0)`;
+        const koperasiProfit = this.markupSettings.koperasiTagihan || 1000;
+        markupAmount = resellerProfit + koperasiProfit;
+        markupDesc = isAdmin
+          ? `Kop +Rp ${koperasiProfit.toLocaleString()} | Reseller +Rp ${resellerProfit.toLocaleString()}`
+          : `Reseller +Rp ${resellerProfit.toLocaleString()}`;
         
         if (p.base_price === 0) {
           // Dynamic bill payment

@@ -44,7 +44,7 @@ Konter-App/
     *   **Total Omset:** Akumulasi total harga jual akhir dari seluruh transaksi.
     *   **Total Modal:** Akumulasi total harga modal distributor dari seluruh transaksi.
     *   **Laba Bersih Saya (Reseller):** Akumulasi komisi dasar reseller + akumulasi bonus pembulatan.
-    *   **Laba Bersih Koperasi:** Akumulasi komisi bagi hasil koperasi (Rp 1.000/transaksi pulsa).
+    *   **Laba Bersih Koperasi:** Akumulasi komisi bagi hasil koperasi (Rp 1.000/transaksi).
     *   **Bonus Pembulatan:** Akumulasi surplus hasil pembulatan ke atas.
 *   Grafik Tren Penjualan: Grafik perolehan harian Reseller vs Koperasi menggunakan **Chart.js**.
 *   Log Transaksi Terkini: Menampilkan 5 transaksi terakhir untuk pemantauan cepat.
@@ -88,19 +88,19 @@ Aturan pembagian keuntungan dikunci secara otomatis saat transaksi disimpan berd
     $$\text{Laba Reseller} = \text{Rp 1.000} + (\text{Harga Jual Akhir} - \text{Harga Modal} - \text{Rp 2.000})$$
 
 ### Kategori 2: Topup E-Wallet & Game
-*   **Aturan Bagi Hasil Pokok:** Koperasi = Rp 0 | Reseller = Rp 3.000
+*   **Aturan Bagi Hasil Pokok:** Koperasi = Rp 1.000 | Reseller = Rp 3.000
 *   **Pembulatan Harga Jual Akhir:** Dibotolkan ke atas menuju ribuan bulat terdekat (kelipatan Rp 1.000).
 *   **Rumus:**
-    $$\text{Harga Jual Akhir} = \text{Math.ceil}((\text{Harga Modal} + \text{Rp 3.000}) / 1000) \times 1000$$
-    $$\text{Laba Koperasi} = \text{Rp 0}$$
-    $$\text{Laba Reseller} = \text{Rp 3.000} + (\text{Harga Jual Akhir} - \text{Harga Modal} - \text{Rp 3.000})$$
+    $$\text{Harga Jual Akhir} = \text{Math.ceil}((\text{Harga Modal} + \text{Rp 4.000}) / 1000) \times 1000$$
+    $$\text{Laba Koperasi} = \text{Rp 1.000}$$
+    $$\text{Laba Reseller} = \text{Rp 3.000} + (\text{Harga Jual Akhir} - \text{Harga Modal} - \text{Rp 4.000})$$
 
 ### Kategori 3: Pembayaran Tagihan (PLN Bulanan, PDAM, dll)
 *   *Catatan:* Tagihan tidak menggunakan pembulatan kelipatan Rp 1.000 untuk mencegah selisih bayar nominal tagihan riil pelanggan.
-*   **Aturan Bagi Hasil Pokok:** Koperasi = Rp 0 | Reseller = Rp 3.000
+*   **Aturan Bagi Hasil Pokok:** Koperasi = Rp 1.000 | Reseller = Rp 3.000
 *   **Rumus:**
-    $$\text{Harga Jual Akhir} = \text{Harga Tagihan (Modal)} + \text{Rp 3.000}$$
-    $$\text{Laba Koperasi} = \text{Rp 0}$$
+    $$\text{Harga Jual Akhir} = \text{Harga Tagihan (Modal)} + \text{Rp 4.000}$$
+    $$\text{Laba Koperasi} = \text{Rp 1.000}$$
     $$\text{Laba Reseller} = \text{Rp 3.000}$$
 
 ---
@@ -138,3 +138,30 @@ CREATE TABLE konter_transactions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
+
+---
+
+## 6. Hak Akses & Multi-Role Pengguna (Akses Kontrol)
+Aplikasi ini memiliki sistem otentikasi sederhana berbasis peran (role) untuk membedakan antara Administrator dan Reseller Partner:
+
+### A. Role: Administrator (Admin)
+*   **Kredensial:** `admin` / `koperasi123`
+*   **Deskripsi Peran:** Memiliki hak akses penuh untuk mengelola, melihat, dan mengonfigurasi seluruh aspek finansial.
+*   **Fitur Khusus Admin:**
+    *   Melihat widget **Laba Bersih Koperasi** di Dashboard.
+    *   Melihat visualisasi bagi hasil Koperasi vs Reseller pada grafik tren.
+    *   Melihat kolom **Laba Kop** di Log Transaksi dan Live Breakdown kalkulasi.
+    *   Mengakses dan mengunduh **Laporan Laba Koperasi**.
+    *   Mengonfigurasi Bagi Hasil Koperasi (Pulsa, Topup, Tagihan) pada Panel Markup Profit Global.
+    *   Mengelola koneksi database cloud Firebase.
+
+### B. Role: Reseller Partner (Reseller)
+*   **Kredensial:** `reseller` / `reseller123`
+*   **Deskripsi Peran:** Hanya fokus pada pencatatan transaksi harian dan pemantauan kinerja pribadi reseller tanpa melihat data finansial internal koperasi.
+*   **Fitur/Pembatasan Reseller:**
+    *   Widget **Laba Bersih Koperasi** disembunyikan dari Dashboard.
+    *   Grafik tren hanya memuat laba reseller pribadi.
+    *   Log transaksi dan live breakdown menyembunyikan nominal bagi hasil milik koperasi.
+    *   Tab **Laporan Laba Koperasi** disembunyikan (hanya bisa mengakses laporan laba reseller sendiri).
+    *   Kolom pengaturan bagi hasil koperasi dan panel sinkronisasi cloud pada halaman Daftar Harga disembunyikan.
+

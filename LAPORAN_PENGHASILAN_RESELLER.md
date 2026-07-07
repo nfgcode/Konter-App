@@ -8,14 +8,19 @@ Setiap transaksi dikategorikan berdasarkan produk dan memiliki perhitungan profi
 
 *   **Kategori Pulsa Seluler:**
     *   **Komisi Pokok:** Rp 1.000 per transaksi.
-    *   **Bonus Pembulatan:** Selisih antara harga jual (setelah dibulatkan ke ribuan terdekat) dengan harga modal distributor dan komisi dasar.
+    *   **Bonus Pembulatan:** Selisih antara harga jual (setelah dibulatkan ke ribuan terdekat) dengan harga modal distributor dan total komisi dasar (Rp 2.000 = Rp 1.000 Reseller + Rp 1.000 Koperasi).
     *   **Rumus:**
         $$\text{Laba Saya} = \text{Rp 1.000} + (\text{Harga Jual} - \text{Harga Modal} - \text{Rp 2.000})$$
-*   **Kategori Lainnya (Topup Game/E-Wallet & Bayar Tagihan):**
-    *   **Komisi Pokok:** Rp 3.000 per transaksi (seluruhnya hak reseller, koperasi Rp 0).
-    *   **Bonus Pembulatan (Hanya Topup):** Selisih pembulatan ribuan ke atas.
+*   **Kategori Topup Game / E-Wallet:**
+    *   **Komisi Pokok:** Rp 3.000 per transaksi.
+    *   **Bonus Pembulatan:** Selisih antara harga jual (setelah dibulatkan ke ribuan terdekat) dengan harga modal distributor dan total komisi dasar (Rp 4.000 = Rp 3.000 Reseller + Rp 1.000 Koperasi).
     *   **Rumus:**
-        $$\text{Laba Saya} = \text{Rp 3.000} + (\text{Harga Jual} - \text{Harga Modal} - \text{Rp 3.000})$$
+        $$\text{Laba Saya} = \text{Rp 3.000} + (\text{Harga Jual} - \text{Harga Modal} - \text{Rp 4.000})$$
+*   **Kategori Pembayaran Tagihan:**
+    *   **Komisi Pokok:** Rp 3.000 per transaksi (tanpa pembulatan).
+    *   **Bagi Hasil Koperasi:** Rp 1.000 per transaksi.
+    *   **Rumus:**
+        $$\text{Laba Saya} = \text{Rp 3.000} + (\text{Harga Jual} - \text{Harga Modal} - \text{Rp 4.000})$$
 
 ---
 

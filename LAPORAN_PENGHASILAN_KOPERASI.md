@@ -4,15 +4,12 @@
 Dokumen ini mencatat format, aturan perhitungan, dan akumulasi laba bersih milik Koperasi dari transaksi bagi hasil penjualan pulsa seluler di ruko/konter koperasi.
 
 ## 1. Aturan Perhitungan Keuntungan Koperasi
-Bagi hasil koperasi dihitung secara otomatis dan eksklusif untuk kategori penjualan Pulsa dengan ketentuan berikut:
+Bagi hasil koperasi dihitung secara otomatis untuk seluruh kategori transaksi dengan ketentuan berikut:
 
-*   **Kategori Pulsa Seluler:**
-    *   **Komisi Pokok Koperasi:** Flat **Rp 1.000** per transaksi penjualan pulsa.
-    *   **Keuntungan Tambahan / Kas:** Rp 0 (kecuali disepakati pembagian bonus pembulatan di masa depan).
-    *   **Rumus:**
-        $$\text{Laba Koperasi} = \text{Jumlah Transaksi Pulsa} \times \text{Rp 1.000}$$
-*   **Kategori Lainnya (Topup Game/E-Wallet & Bayar Tagihan):**
-    *   **Bagi Hasil Koperasi:** Rp 0 per transaksi (seluruhnya merupakan hak operasional reseller untuk menutup biaya admin, kecuali dikonfigurasi lain pada menu peraturan).
+*   **Bagi Hasil Flat Koperasi:** Flat **Rp 1.000** per transaksi penjualan (baik Pulsa Seluler, Topup E-Wallet & Game, maupun Pembayaran Tagihan).
+*   **Keuntungan Tambahan / Kas:** Rp 0 (kecuali disepakati pembagian bonus pembulatan di masa depan).
+*   **Rumus:**
+    $$\text{Laba Koperasi} = \text{Jumlah Semua Transaksi} \times \text{Rp 1.000}$$
 
 ---
 

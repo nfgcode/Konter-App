@@ -1064,3 +1064,9 @@ body.light-theme .brand-name {
     color: black !important;
   }
 }
+
+/* Role based views */
+body.role-reseller .admin-only {
+  display: none !important;
+}
+
