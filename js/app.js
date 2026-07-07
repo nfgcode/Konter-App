@@ -187,11 +187,11 @@ class KonterTrackApp {
     const savedAdminHash = localStorage.getItem('konter_admin_pass_hash');
     const savedResellerHash = localStorage.getItem('konter_reseller_pass_hash');
 
-    const adminPassHash = savedAdminHash || "d0619a9eb221cf3e639686036181f083d09a0614138e6e580e55b4fb3ef696d7"; // default: koperasi123
-    const resellerPassHash = savedResellerHash || "785d0d9370776b92f7027d796781216999b7941fb6717a6a4220b33b7e750e39"; // default: reseller123
+    const adminPassHash = savedAdminHash || "3995c5ab78e11f0f454490f9a3cccfe0867d379336bdc50bf06afd136ff43489"; // default: koperasi123
+    const resellerPassHash = savedResellerHash || "69ff63ab831a811281d43c71c31fee45924edcb73993179c5c6ca0ece3e62fd2"; // default: reseller123
 
     const defaultAdminUserHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // admin
-    const defaultResellerUserHash = "632129037c8651817dbcf26487e415fb5c4e976db57f00f074d28472506e7804"; // reseller
+    const defaultResellerUserHash = "f5a46d562f4068b8db71485cc9d30a7f0fe39da0014d8e785e48a1aea0c2448d"; // reseller
 
     if (userHash === defaultAdminUserHash && passHash === adminPassHash) {
       return 'admin';
